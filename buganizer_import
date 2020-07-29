@@ -1,0 +1,66 @@
+function sfImport(){
+  var sql = "select bug_id,sm,pm,initiative,summary,feature,Kanban,ONEpgr,ONEpgr_status,POC_status,target_date,Team,AgileType,capability,iteration, PI,fstatus,cap_swag,swag, bestswag, feature_points,total_points from gts_tpms_pms.agile_data order by summary";
+  var data=getPLXdata(sql);
+  var sheet=SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Bug Data");
+  sheet.getRange(2,1,sheet.getLastRow(),22).clear();
+  sheet.getRange(2,1,data.length,data[0].length ).setValues(data);
+
+//V1 Epics  
+  sql = "select AssetType,	Reference,	Name,	Category,	Status,	Super,	Team,	Scope,	Swag,	PlannedStart,	PlannedEnd from gts_tpms_pms.v1epics";
+  data=getPLXdata(sql);
+  var sheet2=SpreadsheetApp.getActiveSpreadsheet().getSheetByName("V1 Import-Epic");
+  sheet2.getRange(2,1,sheet2.getLastRow(),22).clear();
+  sheet2.getRange(2,1,data.length,data[0].length ).setValues(data);
+
+//V1 Stories
+  sql = "select AssetType,	Reference,	Name,	Super,	Team,	Estimate,	Scope,	Status,	Timebox from gts_tpms_pms.v1stories";
+  data=getPLXdata(sql);
+  var sheet2=SpreadsheetApp.getActiveSpreadsheet().getSheetByName("V1 Import-Story");
+  sheet2.getRange(2,1,sheet2.getLastRow(),22).clear();
+  sheet2.getRange(2,1,data.length,data[0].length ).setValues(data);
+}
+
+function getPLXdata(sql){
+ var request = {
+    queryRequest: {
+      query: {
+        text: sql,
+        engine: "DREMEL"
+      },
+      //add parameters, if any exist
+      //castedParameters
+      parameter: {
+      },
+      // disabling cached queries
+      cacheControl: {
+        minCacheTimestampMs: -1
+      }
+    }
+  };
+  
+  var projection = Plx.Projections.create(request);
+  
+  while (projection.state !== 'done') {
+    try {
+      Utilities.sleep(10000);
+      projection = getProjection_(projection);
+      
+      var startTime = new Date(parseInt(projection.executionStatistics.startTimeMs,10));
+      var endTime = new Date(parseInt(projection.executionStatistics.endTimeMs,10));
+      Logger.log("Start: "+startTime);
+      Logger.log("End: "+endTime);
+    }
+    catch (err) {
+      Logger.log(err);
+      return
+    }
+  }
+  var data = Utilities.parseCsv(projection.data);
+  data.splice(0,1);  //removes the headers
+  return data;
+}
+
+
+function getProjection_(projection) {
+  return Plx.Projections.get(projection.id, { token: projection.token });
+}
