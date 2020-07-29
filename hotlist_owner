@@ -1,0 +1,13 @@
+function HotlistOwner() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Access");
+  var datarange = sheet.getRange(2,4,sheet.getLastRow()-1);
+  var hotlists = datarange.getValues();
+  Logger.log(hotlists);
+  for ( var i in hotlists) 
+  {
+    var hotlist = parseInt(hotlists[i]).toFixed(0);
+     Logger.log(hotlist);
+     var hl = BuganizerApp.getHotlist(hotlist);
+     hl.addOwners(['fcockrell']).flush();  //based on the current code, I cannot add a group only individual emails
+  }
+} 
