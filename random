@@ -1,0 +1,4 @@
+
+//getValues() gets the entire array in the sheet
+var dataArray = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet().getDataRange().getValues();
+
